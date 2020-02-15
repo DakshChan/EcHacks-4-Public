@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Simple Map</title>
+	<meta name="viewport" content="initial-scale=1.0">
+	<meta charset="utf-8">
+	<style>
+		/* Always set the map height explicitly to define the size of the div
+		 * element that contains the map. */
+
+		body {
+			overflow: hidden;
+		}
+
+		#map {
+			height: 100%;
+			width: 80%;
+		}
+
+		#notifications {
+			top: 0;
+			right: 0;
+			height: 65%;
+			width: 20%;
+			position: absolute;
+			text-align: center;
+			overflow: auto;
+		}
+
+		#recom {
+			top:65%;
+			right: 0;
+			height: 35%;
+			width: 20%;
+			position: absolute;
+			text-align: center;
+			overflow: auto;
+		}
+
+		/* Optional: Makes the sample page fill the window. */
+		html, body {
+			height: 100%;
+			margin: 0;
+			padding: 0;
+		}
+	</style>
+</head>
+<body>
+<div id="map"></div>
+
+<div id="notifications">
+	<h3>Transactions</h3>
+	<ol>
+		{% for object in data %}
+		<li style="cursor: pointer; margin: 10px 0;" onclick="display('{{object[6]}}');map.setCenter(new google.maps.LatLng(parseFloat('{{object[0]}}'),parseFloat('{{object[1]}}')));map.setZoom(18)">
+			{{object[3]}} <br>
+			<div id="{{object[6]}}" style="display: none;">
+				{{object[2]}}$ <br> {{object[5]}} <br> {{object[6]}}
+			</div>
+		</li>
+		{% endfor %}
+	</ol>
+</div>
+
+<div id="recom">
+	<h3>Recomendations</h3>
+	<ol>
+		{% for object in greenData %}
+		<li style="cursor: pointer; margin: 10px 0;" onclick="searchFunc('{{object}}');">
+			{{object}} <br>
+
+		</li>
+		{% endfor %}
+	</ol>
+
+</div>
+
+<script>
+    var map;
+    var latitude = "{{ina}}"
+	var longitude = "{{inb}}"
+	var cur = "{{inc}}"
+
+	latitude = latitude.substring(1, latitude.length-1)
+	longitude = longitude.substring(1, longitude.length-1)
+	cur2 = cur.substring(1, longitude.length-1)
+
+	var lat = latitude.split(",")
+	var long = longitude.split(",")
+	var cur3 = cur2.split(",")
+
+	var lat2 = []
+	var long2 = []
+	var cur4 = []
+
+	var service;
+    var infowindow;
+
+
+
+	var heat = []
+
+
+
+
+
+    function initMap() {
+
+		for (var i = 0; i < lat.length; i++){
+			heat.push(new google.maps.LatLng(parseFloat(lat[i]), parseFloat(long[i])))
+			cur4.push(parseFloat(cur3[i]))
+		}
+
+
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: new google.maps.LatLng(parseFloat(lat[0]), parseFloat(long[0])),
+            zoom: 12
+        });
+
+        var heatmap = new google.maps.visualization.HeatmapLayer({
+            data: heat,
+        });
+        heatmap.setMap(heatmap.getMap() ? null : map);
+        heatmap.set('opacity', heatmap.get('opacity') ? null : 0.3)
+        heatmap.set('radius', heatmap.get('radius') ? null : 50);
+
+        return map
+	}
+
+	function searchFunc(target){
+
+		var item = target
+
+
+        map = initMap();
+		infowindow = new google.maps.InfoWindow();
+
+        var request = {
+			query: item,
+			fields: ['name', 'geometry'],
+		  };
+
+        var service = new google.maps.places.PlacesService(map);
+
+        service.findPlaceFromQuery(request, function(results, status) {
+          if (status === google.maps.places.PlacesServiceStatus.OK) {
+            for (var i = 0; i < results.length; i++) {
+              createMarker(results[i]);
+            }
+
+            map.setCenter(results[0].geometry.location);
+          }
+        });
+      }
+
+      function createMarker(place) {
+        var marker = new google.maps.Marker({
+          map: map,
+          position: place.geometry.location
+        });
+        }
+
+	function display(id) {
+		if(document.getElementById(id).style.display == "inline") {
+			document.getElementById(id).style.display = "none";
+		} else {
+			document.getElementById(id).style.display = "inline";
+		}
+		
+	}
+
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{googlekey}}&libraries=places,visualization&callback=initMap"
+		async defer></script>
+</body>
+</html>
